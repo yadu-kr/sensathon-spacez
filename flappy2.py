@@ -12,36 +12,12 @@ val1 = 0
 
 index = 0
 data = 0
-#string = string.replace("\r","")
-#string = string.replace("\n","")
 
 def readserial():
-    global val1
-    ser_bytes = ser.parseInt()
-    ser_bytes = ser_bytes.decode("utf-8")
-    print(ser_bytes.rstrip())
-    val1 = ser_bytes
-    #index.append(val1)
-    
-    #if len(index) == 1:
-        #display1 = Label(main,text=index[0]).place(x=50,y=10)
-    #elif len(index) == 2:
-        #display1 = tk.Label(root,text=index[0]).place(x=10,y=10)
-        #display2 = Label(main,text=index[1]).place(x=50,y=40)
-    #print(index)
-        
-    #if len(index) == 2:
-        #print("Done")
-        #index.clear()
-    while True:
-        line = ser.readline().rstrip()
-        if not line:
-            continue
-
-    resultType = line[0]
-    data = int(line[1:])
-    
-    time.sleep(0.005)
+	ser.write("g")
+	speed = ser.read(1) * 256;
+        speed = speed + ser.read(1)
+	return speed
 
 t1 = continuous_threading.PeriodicThread(0.005, readserial)
 t1.start()
