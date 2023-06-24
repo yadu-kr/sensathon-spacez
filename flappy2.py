@@ -14,10 +14,10 @@ index = 0
 data = 0
 
 def readserial():
-	ser.write("g")
-	speed = ser.read(1) * 256;
-        speed = speed + ser.read(1)
-	return speed
+    
+    index = ser.readline().decode('utf-8')
+    data = float(index.rstrip())
+    print (data)
 
 t1 = continuous_threading.PeriodicThread(0.005, readserial)
 t1.start()
@@ -176,7 +176,7 @@ main.after(FRAMERATE, pipesMotion)
 main.after(FRAMERATE, detectCollision)
 main.bind("<space>", restartGame)
 #main.bind("<space>", birdUp)
-line = ser.readline().rstrip() 
-if (data <= 100530):
-    main.bind(1, birdUp)
+#line = ser.readline().rstrip() 
+if (data <= 100510.0):
+    main.bind(True, birdUp)
 main.mainloop()
