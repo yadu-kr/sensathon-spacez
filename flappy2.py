@@ -7,28 +7,71 @@ import random
 import os
 
 
-ser = serial.Serial('COM8',19200)
+ser1 = serial.Serial('COM8',19200) #white cable
+ser2 = serial.Serial('COM9',19200) #black cable
 val1 = 0
 
-index = 0
-data = 0
+index1 = 0
+data1 = 0
+index2 = 0
+data2 = 0
 
+counter = 0
+calib_value = 0
+lower = 0
+upper = 0
+newvalue = 0
 def readserial():
     
-    index = ser.readline().decode('utf-8')
-    data = float(index.rstrip())
-    print (data)
-    print("IF not true")
-    if (data <= 100510.0):
-        print("UP")
-        main.after(FRAMERATE, birdUp)
+    global counter
+    global calib_value
+    global lower
+    global upper
+    global newvalue
+
+    index1 = ser1.readline().decode('utf-8')
+    data1 = float(index1.rstrip())
+    #print ("Ground", data1)
+    index2 = ser2.readline().decode('utf-8')
+    data2 = float(index2.rstrip())
+    #print ("Controller", data2)
+    
+
+    if (counter == 0):
+        counter = counter + 1
+    elif (counter == 1):
+        counter = counter + 1
+        calib_value = data1 - data2
+        #print("Calib value", calib_value)
+
+    lower = calib_value - 15
+    upper = calib_value + 15
+    oldvalue = data1-data2
+        
+    if ((data1-data2) > calib_value):
+        #print("Up")
+        # map data difference to value between 0 and 200      
+        newvalue = ((oldvalue - calib_value) * 350)/(upper - calib_value)
+        #main.after(FRAMERATE, birdUp)
+        birdUp()
+        #print("New value", newvalue)
+
+    elif ((data1-data2) <= calib_value):
+        #print("Down")
+        #map data diff to value between 0 and 200        
+        newvalue = 350 - ((oldvalue - lower) * 350)/(calib_value - lower)
+        #main.after(FRAMERATE, birdDown)
+        birdDown()
+        #print("New value", newvalue)
+
+    #print("Nothing true: ", data1, "  ", data2)
 
 
-t1 = continuous_threading.PeriodicThread(0.005, readserial)
+t1 = continuous_threading.PeriodicThread(0.05, readserial)
 t1.start()
 
 
-FRAMERATE = 20
+FRAMERATE = 30
 SCORE = -1
 
 def center(toplevel):
@@ -47,7 +90,7 @@ main.geometry('550x700')
 
 center(main)
 
-BIRD_Y = 200
+BIRD_Y = 350
 PIPE_X = 550
 PIPE_HOLE = 0
 NOW_PAUSE = False
@@ -91,30 +134,42 @@ def generatePipeHole():
 generatePipeHole()
 
 def birdUp():
-	global BIRD_Y
-	global up_count
-	global NOW_PAUSE
-	
-	if NOW_PAUSE == False: 
-		BIRD_Y -= 20
-		if BIRD_Y <= 0: BIRD_Y = 0
-		w.coords(bird, 100, BIRD_Y)
-		if up_count < 6:
-			up_count += 1
-			main.after(FRAMERATE, birdUp)
+    global BIRD_Y
+    global up_count
+    global NOW_PAUSE
+    global newvalue
+    
+    BIRD_Y = 350 - int(newvalue)
+    #print(BIRD_Y)
+    if BIRD_Y <= 0: BIRD_Y = 0
+    w.coords(bird, 100, BIRD_Y)
+    #if NOW_PAUSE == False: main.after(FRAMERATE,birdUp)
+    #if NOW_PAUSE == False: 
+        #main.after(FRAMERATE, birdUp)
+		
+		
+		
+		#if up_count < 5:
+		#	up_count += 1
+		#	main.after(FRAMERATE, birdUp)
 			
-		else: up_count = 0
-#	else:
-#		restartGame()
+		#else: up_count = 0
+    #else:
+        #restartGame()
+
 
 def birdDown():
-	global BIRD_Y
-	global NOW_PAUSE
+    global BIRD_Y
+    global NOW_PAUSE
+    global newvalue
+    
+    BIRD_Y = 350 + int(newvalue)
+    #print(BIRD_Y)
+    if BIRD_Y >= 700: BIRD_Y = 700
+    w.coords(bird, 100, BIRD_Y)
+    #if NOW_PAUSE == False: main.after(FRAMERATE,birdDown)
 
-	BIRD_Y += 8
-	if BIRD_Y >= 700: BIRD_Y = 700
-	w.coords(bird, 100, BIRD_Y)
-	if NOW_PAUSE == False: main.after(FRAMERATE,birdDown)
+
 
 def pipesMotion():
 	global PIPE_X
@@ -132,12 +187,13 @@ def pipesMotion():
 	if NOW_PAUSE == False: main.after(FRAMERATE, pipesMotion)
 
 def engGameScreen():
-	global endRectangle
-	global endScore
-	global endBest
-	endRectangle = w.create_rectangle(0, 0, 550, 700, fill='#4EC0CA')
-	endScore = w.create_text(15, 200, text="Your score: " + str(SCORE), font='Impact 50', fill='#ffffff', anchor=W)
-	endBest = w.create_text(15, 280, text="Best score: " + str(BEST_SCORE), font='Impact 50', fill='#ffffff', anchor=W)
+    global endRectangle
+    global endScore
+    global endBest
+
+    endRectangle = w.create_rectangle(0, 0, 550, 700, fill='#4EC0CA')
+    endScore = w.create_text(15, 200, text="Your score: " + str(SCORE), font='Impact 50', fill='#ffffff', anchor=W)
+    endBest = w.create_text(15, 280, text="Best score: " + str(BEST_SCORE), font='Impact 50', fill='#ffffff', anchor=W)
 
 def detectCollision():
 	global NOW_PAUSE
@@ -156,29 +212,35 @@ def detectCollision():
 	if NOW_PAUSE == False: main.after(FRAMERATE, detectCollision)
 
 def restartGame(event = None):
-	global PIPE_X
-	global BIRD_Y
-	global SCORE
-	global NOW_PAUSE
-	global FRAMERATE
+    global PIPE_X
+    global BIRD_Y
+    global SCORE
+    global NOW_PAUSE
+    global FRAMERATE
+    
+    BIRD_Y = 350
+    PIPE_X = 550
+    SCORE = -1
+    FRAMERATE = 30
+    NOW_PAUSE = False
+    
+    global counter
+    
+    counter = 0
+        
+    w.delete(endScore)
+    w.delete(endRectangle)
+    w.delete(endBest)
+    generatePipeHole()
+    #main.after(FRAMERATE, birdDown)
+    main.after(FRAMERATE, pipesMotion)
+    main.after(FRAMERATE, detectCollision)
 
-	BIRD_Y = 200
-	PIPE_X = 550
-	SCORE = -1
-	FRAMERATE = 20
-	NOW_PAUSE = False
-	w.delete(endScore)
-	w.delete(endRectangle)
-	w.delete(endBest)
-	generatePipeHole()
-	main.after(FRAMERATE, birdDown)
-	main.after(FRAMERATE, pipesMotion)
-	main.after(FRAMERATE, detectCollision)
-	
-main.after(FRAMERATE, birdDown)
+# main.after(FRAMERATE, birdUp)	
+#main.after(FRAMERATE, birdDown)
 main.after(FRAMERATE, pipesMotion)
 main.after(FRAMERATE, detectCollision)
 main.bind("<space>", restartGame)
-#main.bind("<space>", birdUp)
+
 #line = ser.readline().rstrip() 
 main.mainloop()
