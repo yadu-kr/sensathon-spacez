@@ -18,10 +18,14 @@ def readserial():
     index = ser.readline().decode('utf-8')
     data = float(index.rstrip())
     print (data)
+    print("IF not true")
+    if (data <= 100510.0):
+        print("UP")
+        main.after(FRAMERATE, birdUp)
+
 
 t1 = continuous_threading.PeriodicThread(0.005, readserial)
 t1.start()
-#print(index[1])
 
 
 FRAMERATE = 20
@@ -86,7 +90,7 @@ def generatePipeHole():
 
 generatePipeHole()
 
-def birdUp(event = None):
+def birdUp():
 	global BIRD_Y
 	global up_count
 	global NOW_PAUSE
@@ -95,7 +99,7 @@ def birdUp(event = None):
 		BIRD_Y -= 20
 		if BIRD_Y <= 0: BIRD_Y = 0
 		w.coords(bird, 100, BIRD_Y)
-		if up_count < 5:
+		if up_count < 6:
 			up_count += 1
 			main.after(FRAMERATE, birdUp)
 			
@@ -177,6 +181,4 @@ main.after(FRAMERATE, detectCollision)
 main.bind("<space>", restartGame)
 #main.bind("<space>", birdUp)
 #line = ser.readline().rstrip() 
-if (data <= 100510.0):
-    main.bind(True, birdUp)
 main.mainloop()
