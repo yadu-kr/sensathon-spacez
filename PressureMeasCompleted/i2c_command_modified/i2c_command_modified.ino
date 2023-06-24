@@ -78,6 +78,7 @@ void loop()
   }
   else
   {
+    // only pressure is needed for the application
     //Serial.print("Pressure: ");
     Serial.print(pressure);
     //Serial.println(" Pascal");
